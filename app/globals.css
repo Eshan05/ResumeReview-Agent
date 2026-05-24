@@ -1,8 +1,22 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
+/* @import "shadcn/tailwind.css"; */
 
 @custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-inter: 'Inter', sans-serif;
+  --font-sans: 'Geist', 'Geist Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-fjalla-one: 'Fjalla One', sans-serif;
+  --breakpoint-xs: 30rem;
+  --breakpoint-emd: 768px;
+  --container-8xl: 1440px;
+  --text-2xs: 0.7rem;
+  --text-tiny: 0.625rem;
+  --color-informative: hsl(var(--informative));
+  --color-informative-foreground: hsl(var(--informative-foreground));
+}
 
 @theme inline {
   --color-background: var(--background);
@@ -127,4 +141,28 @@
   html {
     @apply font-sans;
   }
+}
+
+@layer utilities {
+  body {
+    font-family: 'Inter', 'Geist', Arial, Helvetica, sans-serif;
+  }
+}
+
+.small-caps {
+  font-variant: small-caps;
+}
+
+@layer utilities {
+  .shadow-heading {
+    @apply bg-gradient-to-br dark:from-white from-black from-30% dark:to-white/40 to-black/40 bg-clip-text leading-none tracking-tighter text-transparent text-balance;
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
