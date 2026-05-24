@@ -143,12 +143,6 @@
   }
 }
 
-@layer utilities {
-  body {
-    font-family: 'Inter', 'Geist', Arial, Helvetica, sans-serif;
-  }
-}
-
 .small-caps {
   font-variant: small-caps;
 }
