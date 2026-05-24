@@ -54,8 +54,8 @@ importers:
         specifier: ^0.45.2
         version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.0)(@upstash/redis@1.38.0)(knex@3.2.10(mysql2@3.20.0(@types/node@25.9.1))(pg@8.20.0)(sqlite3@5.1.7))(kysely@0.28.17)(mysql2@3.20.0(@types/node@25.9.1))(pg@8.20.0)(sqlite3@5.1.7)
       files-sdk:
-        specifier: 1.4.0
-        version: 1.4.0(@azure/identity@4.13.1)(@google-cloud/storage@7.19.0(encoding@0.1.13))(google-auth-library@9.15.1(encoding@0.1.13))(uploadthing@7.7.4(express@5.2.1)(next@16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(tailwindcss@4.3.0))(zod@4.4.3)
+        specifier: 1.5.0
+        version: 1.5.0(@azure/core-auth@1.10.1)(@azure/identity@4.13.1)(@google-cloud/storage@7.19.0(encoding@0.1.13))(google-auth-library@9.15.1(encoding@0.1.13))(uploadthing@7.7.4(express@4.22.2)(next@16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(tailwindcss@4.3.0))(zod@4.4.3)
       lucide-react:
         specifier: ^1.16.0
         version: 1.16.0(react@19.2.6)
@@ -106,7 +106,7 @@ importers:
         version: 1.4.0
       uploadthing:
         specifier: 7.7.4
-        version: 7.7.4(express@5.2.1)(next@16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(tailwindcss@4.3.0)
+        version: 7.7.4(express@4.22.2)(next@16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(tailwindcss@4.3.0)
       vaul:
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -4027,14 +4027,15 @@ packages:
   file-uri-to-path@1.0.0:
     resolution: {integrity: sha512-0Zt+s3L7Vf1biwWZ29aARiVYLx7iMGnEUl9x33fbB/j3jR81u/O2LbqK+Bm1CDSNDKVtJ/YjwY7TUd5SkeLQLw==}
 
-  files-sdk@1.4.0:
-    resolution: {integrity: sha512-vqZYRv18aigfJNE+DucNcUAG1XNiuJmmeGoOBbLV7urmwIxdl1dr41YQu22VSsriI5q77LOggPUfRVDMwwVVkA==}
+  files-sdk@1.5.0:
+    resolution: {integrity: sha512-G+zNCMev8zgfbr8qYuxK3jvwkh1DnUJoJpnXbpsdQfw0nnrypH5HG7jOGJSOhqyesw0i/jJ32bW71yI4US9V9g==}
     hasBin: true
     peerDependencies:
       '@anthropic-ai/claude-agent-sdk': ^0.2.0
       '@aws-sdk/client-s3': ^3.700.0
       '@aws-sdk/s3-presigned-post': ^3.700.0
       '@aws-sdk/s3-request-presigner': ^3.700.0
+      '@azure/core-auth': ^1.9.0
       '@azure/identity': ^4.5.0
       '@azure/storage-blob': ^12.26.0
       '@bunny.net/storage-sdk': ^0.3.1
@@ -4044,16 +4045,19 @@ packages:
       '@netlify/blobs': ^10.7.4
       '@openai/agents': ^0.11.0
       '@supabase/storage-js': ^2.105.4
-      '@vercel/blob': ^2.3
+      '@vercel/blob': ^2.4.0
       ai: ^6.0.0
+      basic-ftp: ^6.0.1
       box-typescript-sdk-gen: ^1.19.1
       cloudinary: ^2.10.0
+      convex: ^1.16.0
       dropbox: ^10.34.0
       firebase-admin: ^13.10.0
       google-auth-library: ^9.15.1
       node-appwrite: ^24.1.0
       openai: ^6.0.0
       pocketbase: ^0.26.9
+      ssh2-sftp-client: ^12.1.1
       uploadthing: ^7
       zod: ^3.23.0 || ^4.0.0
     peerDependenciesMeta:
@@ -4064,6 +4068,8 @@ packages:
       '@aws-sdk/s3-presigned-post':
         optional: true
       '@aws-sdk/s3-request-presigner':
+        optional: true
+      '@azure/core-auth':
         optional: true
       '@azure/identity':
         optional: true
@@ -4087,9 +4093,13 @@ packages:
         optional: true
       ai:
         optional: true
+      basic-ftp:
+        optional: true
       box-typescript-sdk-gen:
         optional: true
       cloudinary:
+        optional: true
+      convex:
         optional: true
       dropbox:
         optional: true
@@ -4102,6 +4112,8 @@ packages:
       openai:
         optional: true
       pocketbase:
+        optional: true
+      ssh2-sftp-client:
         optional: true
       uploadthing:
         optional: true
@@ -5048,6 +5060,10 @@ packages:
 
   negotiator@0.6.3:
     resolution: {integrity: sha512-+EUsqGPLsM+j/zdChZjsnX51g4XrHFOIXwfnCVPGlQk/k5giakcKsuxCObBRu6DSm9opw/O6slWbJdghQM4bBg==}
+    engines: {node: '>= 0.6'}
+
+  negotiator@0.6.4:
+    resolution: {integrity: sha512-myRT3DiWPHqho5PrJaIRyaMv2kgYf0mUVgBNOYMuCH5Ki1yEiQaf/ZJuQ62nvpc44wL5WDbTX7yGJi1Neevw8w==}
     engines: {node: '>= 0.6'}
 
   negotiator@1.0.0:
@@ -10403,15 +10419,16 @@ snapshots:
 
   file-uri-to-path@1.0.0: {}
 
-  files-sdk@1.4.0(@azure/identity@4.13.1)(@google-cloud/storage@7.19.0(encoding@0.1.13))(google-auth-library@9.15.1(encoding@0.1.13))(uploadthing@7.7.4(express@5.2.1)(next@16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(tailwindcss@4.3.0))(zod@4.4.3):
+  files-sdk@1.5.0(@azure/core-auth@1.10.1)(@azure/identity@4.13.1)(@google-cloud/storage@7.19.0(encoding@0.1.13))(google-auth-library@9.15.1(encoding@0.1.13))(uploadthing@7.7.4(express@4.22.2)(next@16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(tailwindcss@4.3.0))(zod@4.4.3):
     dependencies:
       commander: 12.1.0
     optionalDependencies:
+      '@azure/core-auth': 1.10.1
       '@azure/identity': 4.13.1
       '@google-cloud/storage': 7.19.0(encoding@0.1.13)
       '@modelcontextprotocol/sdk': 1.29.0(zod@4.4.3)
       google-auth-library: 9.15.1(encoding@0.1.13)
-      uploadthing: 7.7.4(express@5.2.1)(next@16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(tailwindcss@4.3.0)
+      uploadthing: 7.7.4(express@4.22.2)(next@16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(tailwindcss@4.3.0)
       zod: 4.4.3
     transitivePeerDependencies:
       - '@cfworker/json-schema'
@@ -11158,7 +11175,7 @@ snapshots:
       minipass-fetch: 1.4.1
       minipass-flush: 1.0.7
       minipass-pipeline: 1.2.4
-      negotiator: 0.6.3
+      negotiator: 0.6.4
       promise-retry: 2.0.1
       socks-proxy-agent: 6.2.1
       ssri: 8.0.1
@@ -11363,6 +11380,9 @@ snapshots:
   native-duplexpair@1.0.0: {}
 
   negotiator@0.6.3: {}
+
+  negotiator@0.6.4:
+    optional: true
 
   negotiator@1.0.0: {}
 
@@ -12691,7 +12711,7 @@ snapshots:
       escalade: 3.2.0
       picocolors: 1.1.1
 
-  uploadthing@7.7.4(express@5.2.1)(next@16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(tailwindcss@4.3.0):
+  uploadthing@7.7.4(express@4.22.2)(next@16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(tailwindcss@4.3.0):
     dependencies:
       '@effect/platform': 0.90.3(effect@3.17.7)
       '@standard-schema/spec': 1.0.0-beta.4
@@ -12699,7 +12719,7 @@ snapshots:
       '@uploadthing/shared': 7.1.10
       effect: 3.17.7
     optionalDependencies:
-      express: 5.2.1
+      express: 4.22.2
       next: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       tailwindcss: 4.3.0
 
