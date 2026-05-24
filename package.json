@@ -13,7 +13,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx scripts/seed.ts",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "email:dev": "email dev"
   },
   "packageManager": "pnpm@11.1.0",
   "engines": {
@@ -23,11 +24,9 @@
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.6.11",
     "@better-auth/passkey": "^1.6.11",
-    "@neondatabase/serverless": "^1.0.1",
     "@dnd-kit/core": "^6.3.1",
     "@hookform/resolvers": "^5.4.0",
-    "@react-email/components": "^1.0.12",
-    "@react-email/tailwind": "^2.0.7",
+    "@neondatabase/serverless": "^1.0.1",
     "@react-pdf/renderer": "^4.5.1",
     "@tanstack/react-query": "^5.90.2",
     "@tanstack/react-table": "^8.21.3",
@@ -41,10 +40,12 @@
     "lucide-react": "^1.16.0",
     "next": "16.2.6",
     "next-themes": "^0.4.6",
+    "nodemailer": "^8.0.7",
     "radix-ui": "^1.4.3",
     "react": "19.2.6",
     "react-day-picker": "^10.0.1",
     "react-dom": "19.2.6",
+    "react-email": "^6.3.2",
     "react-hook-form": "^7.76.1",
     "react-icons": "^5.6.0",
     "react-pdf": "^10.4.1",
@@ -59,7 +60,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.0",
-    "@react-email/preview-server": "^6.3.2",
+    "@react-email/ui": "6.3.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^25.9.1",
     "@types/react": "^19",
@@ -67,7 +68,6 @@
     "babel-plugin-react-compiler": "1.0.0",
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.10",
-    "react-email": "^6.3.2",
     "shadcn": "^4.8.0",
     "tailwindcss": "^4.2.2",
     "tsx": "^4.22.1",
