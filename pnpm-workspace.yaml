@@ -6,6 +6,7 @@ allowBuilds:
   protobufjs: true
   sharp: true
   sqlite3: true
+  tesseract.js: true
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
