@@ -11,11 +11,9 @@ import {
   lastLoginMethod,
   multiSession,
   openAPI,
-  organization,
   twoFactor
 } from "better-auth/plugins";
 
-import { reactInvitationEmail } from "@/lib/email/invitation";
 import { resend } from "@/lib/email/resend";
 import { reactResetPasswordEmail } from "@/lib/email/reset-password";
 import { auditLogs } from "@/lib/db/app.schema";
@@ -24,7 +22,6 @@ import { backgroundTasksHandler, buildAuthAuditLog } from "@/lib/auth/helper-fun
 import { authBaseUrl, authSecret, baseURL, cookieDomain } from "@/utils/constants";
 import { db } from "@/lib/db/db";
 import * as schema from "@/lib/db/schema";
-// import * as schema from "@/lib/db/schema";
 
 const from = process.env.BETTER_AUTH_EMAIL || "delivered@resend.dev";
 const to = process.env.TEST_EMAIL || "";
@@ -35,7 +32,7 @@ const authOptions = {
   basePath: "/api/sessions", // For RESTful naming, the default is '/api/auth'
   secret: authSecret,
   database: drizzleAdapter(db, {
-    provider: "sqlite",
+    provider: "pg",
     usePlural: true,
     schema
   }),
@@ -83,32 +80,6 @@ const authOptions = {
     },
   },
   plugins: [
-    organization({
-      async sendInvitationEmail(data: {
-        id: string;
-        email: string;
-        organization: { name: string };
-        inviter: { user: { name: string; email: string } };
-      }) {
-        await resend.emails.send({
-          from,
-          to: data.email,
-          subject: "You've been invited to join an organization",
-          react: reactInvitationEmail({
-            username: data.email,
-            invitedByUsername: data.inviter.user.name,
-            invitedByEmail: data.inviter.user.email,
-            teamName: data.organization.name,
-            inviteLink:
-              process.env.NODE_ENV === "development"
-                ? `http://localhost:3000/accept-invitation/${data.id}`
-                : `${process.env.BETTER_AUTH_URL ||
-                "https://demo.better-auth.com"
-                }/accept-invitation/${data.id}`,
-          }),
-        });
-      },
-    }),
     // 
     twoFactor({
       otpOptions: {

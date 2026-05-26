@@ -5,7 +5,6 @@ import {
   genericOAuthClient,
   lastLoginMethodClient,
   multiSessionClient,
-  oidcClient,
   twoFactorClient
 } from "better-auth/client/plugins";
 import { passkeyClient } from "@better-auth/passkey/client";
@@ -24,7 +23,6 @@ export const authClient = createAuthClient({
     passkeyClient(),
     adminClient(),
     multiSessionClient(),
-    oidcClient(),
     genericOAuthClient(),
     deviceAuthorizationClient(),
     lastLoginMethodClient(),
@@ -41,4 +39,12 @@ export const {
   signIn,
   signOut,
   useSession,
+  deleteUser,
+  requestPasswordReset,
+  device,
+  getSession,
+  listSessions,
+  revokeSession,
+  revokeOtherSessions,
+  updateUser
 } = authClient;
