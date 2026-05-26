@@ -318,7 +318,8 @@ CREATE TABLE resume_results (
 // tier: "professional" | "cloud" | "online" | "other"
 
 // skills
-{ "skills": [{ "name": "TypeScript", "level": "advanced", "years": 5 }] }
+{ "skills": [{ "name": "TypeScript", "level": "advanced" | null, "years": 5 }] }
+// level: inferred from resume context. null if no signal found (verified in Phase 7).
 
 // experience
 { "experience": [{ "company": "Acme", "role": "Senior Engineer", "duration": "2020-2024", "description": "..." }] }
@@ -382,8 +383,8 @@ CREATE TABLE resume_results (
   "verifiedSkills": [{
     "name": "TypeScript",
     "category": "language",
-    "claimedLevel": "advanced",
-    "verifiedLevel": "advanced",
+    "claimedLevel": "advanced",        // null if not stated in resume
+    "verifiedLevel": "advanced",       // always set — determined by evidence
     "confidence": 95,
     "evidence": ["15 repos in TypeScript", "Used in top 3 projects"],
     "verdict": "confirmed"
@@ -391,6 +392,8 @@ CREATE TABLE resume_results (
   "overallSkillTrust": 89
 }
 // verdict: "confirmed" | "partially_confirmed" | "unverified" | "disputed"
+// verifiedLevel is evidence-based, may differ from claimedLevel
+// If claimedLevel is null, verifiedLevel is inferred from GitHub/project evidence
 
 // project_matches
 { "matchedProjects": [{ "project": "E-commerce Platform", "relevance": 87, "description": "Direct match for full-stack role" }] }

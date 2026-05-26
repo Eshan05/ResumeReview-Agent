@@ -194,6 +194,17 @@ rawText
   │    Input: rawText
   │    Output: { skills: [{ name, level, years }] }
   │
+  │    Level inference strategy:
+  │    - If candidate explicitly states level ("expert in TypeScript") → use stated level
+  │    - If years are mentioned ("5 years of Python") → map to level:
+  │        0-1y = beginner, 2-3y = intermediate, 4+ = advanced
+  │    - If role seniority implies skill ("Senior React Developer") → infer advanced
+  │    - If no signal → output level as null (Phase 7 will verify via evidence)
+  │
+  │    NOTE: Levels extracted here are CLAIMED levels. Phase 7 (Skills Verification)
+  │    validates them against GitHub repos, project links, and experience context.
+  │    A skill with no stated level will be assessed purely by evidence in Phase 7.
+  │
   ├──→ Experience Analyzer Agent (Groq: Llama 4 Scout)
   │    Input: rawText
   │    Output: { experience: [{ company, role, duration, description }] }
@@ -287,7 +298,21 @@ Combined data from Phase 2 + 3 + 4 + 5
 
 ### Phase 7: Skills Verification (fleet of sub-agents)
 
-Cross-reference claimed skills against evidence from GitHub repos and project links. Runs 4 sub-agents in parallel, then a reconciler.
+Cross-reference claimed skills against evidence from GitHub repos, project links, and experience descriptions. Runs 4 sub-agents in parallel, then a reconciler.
+
+**How skill levels are determined when not stated in the resume:**
+
+The Skills Extractor (Phase 2) may output `level: null` if the resume doesn't mention proficiency. In Phase 7, the verification agents infer the actual level purely from evidence:
+
+| Evidence Source | How It Determines Level |
+|----------------|------------------------|
+| **GitHub repos** | Number of repos using the skill, commit frequency, code complexity, star counts. 1 repo with few commits = beginner. 10+ repos with active commits = advanced. |
+| **Project descriptions** | Tech mentioned in project context. "Built X with React" = at least intermediate. "Contributed to Y's React codebase" = moderate signal. |
+| **Experience descriptions** | Keywords like "architected", "led migration of", "designed system using X" imply advanced. "Used X to build Y" implies intermediate. |
+| **LeetCode / HackerRank** | Problem counts and contest ratings for algorithmic skills (Python, Java, C++). |
+| **HuggingFace** | Models/datasets published for ML skills. |
+
+The Skill Reconciler combines these signals into a final `verifiedLevel` and `confidence` score. A skill with no stated level but strong GitHub evidence (e.g., 15 TypeScript repos, 456 stars) can still be verified as "advanced".
 
 ```
 Skills from Phase 4 + GitHub data from Phase 5 + Projects from Phase 4
@@ -298,17 +323,23 @@ Skills from Phase 4 + GitHub data from Phase 5 + Projects from Phase 4
   │      parsedSkills: [{
   │        name: string,
   │        category: "language" | "framework" | "tool" | "concept",
-  │        claimedLevel: string
+  │        claimedLevel: string | null   // null if not stated in resume
   │      }]
   │    }
   │
   ├──→ GitHub Skill Verifier (Groq: Llama 4 Scout)
   │    Input: { parsedSkills, githubData, topRepos }
+  │    Analysis:
+  │    - Count repos where skill is primary language/framework
+  │    - Check commit frequency and recency for that skill
+  │    - Look at star counts on skill-related repos
+  │    - Assess code complexity (file structure, README quality)
   │    Output: {
   │      verifications: [{
   │        skill: string,
   │        evidence: "strong" | "moderate" | "weak" | "none",
-  │        sources: string[],
+  │        sources: string[],          // e.g., ["repo:ecommerce-platform", "repo:ml-pipeline"]
+  │        inferredLevel: string,      // "beginner" | "intermediate" | "advanced"
   │        confidence: number (0-100)
   │      }]
   │    }
@@ -316,23 +347,33 @@ Skills from Phase 4 + GitHub data from Phase 5 + Projects from Phase 4
   ├──→ Project Skill Verifier (Groq: Llama 4 Scout)
   │    Input: { parsedSkills, projects }
   │    Tools: HTTP requests to project demo/live URLs
+  │    Analysis:
+  │    - Check if project links are live and use the claimed tech
+  │    - Look at project descriptions for depth of usage
+  │    - Cross-reference tech stack mentions
   │    Output: {
   │      verifications: [{
   │        skill: string,
   │        evidence: "strong" | "moderate" | "weak" | "none",
   │        sources: string[],
+  │        inferredLevel: string,
   │        confidence: number (0-100)
   │      }]
   │    }
   │
   └──→ Skill Reconciler (Gemini: 2.5 Flash)
        Input: { parsedSkills, githubVerifications, projectVerifications }
+       Analysis:
+       - If claimedLevel is null → use evidence to determine level
+       - If claimedLevel exists → compare against evidence
+       - Resolve conflicts between GitHub and project signals
+       - Weight: GitHub evidence > project evidence > resume claim
        Output: {
          verifiedSkills: [{
            name: string,
            category: string,
-           claimedLevel: string,
-           verifiedLevel: string,
+           claimedLevel: string | null,
+           verifiedLevel: string,       // always set — determined by evidence
            confidence: number (0-100),
            evidence: string[],
            verdict: "confirmed" | "partially_confirmed" | "unverified" | "disputed"
