@@ -32,6 +32,11 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+evals/private/*
+!evals/private/.gitkeep
+evals/reports/*
+!evals/reports/.gitkeep
 
 # vercel
 .vercel
