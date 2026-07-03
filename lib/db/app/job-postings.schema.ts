@@ -1,5 +1,16 @@
-import { text, json, timestamp as pgTimestamp, pgTable } from "drizzle-orm/pg-core";
-import { users, organizations } from "../auth.schema";
+import {
+  json,
+  pgTable,
+  timestamp as pgTimestamp,
+  text,
+} from "drizzle-orm/pg-core";
+import {
+  DEFAULT_JOB_CRITERIA,
+  DEFAULT_JOB_WEIGHTS,
+  type JobCriteria,
+  type JobWeights,
+} from "@/lib/jobs/criteria";
+import { organizations, users } from "../auth.schema";
 import { timestamp, updatedTimestamp } from "./columns";
 
 export const jobPostings = pgTable("job_postings", {
@@ -7,20 +18,17 @@ export const jobPostings = pgTable("job_postings", {
   userId: text("user_id")
     .notNull()
     .references(() => users.id),
-  organizationId: text("organization_id").references(
-    () => organizations.id,
-  ),
+  organizationId: text("organization_id").references(() => organizations.id),
   title: text("title").notNull(),
   description: text("description").notNull(),
   weights: json("weights")
-    .$type<{
-      skills: number;
-      experience: number;
-      projects: number;
-      trust: number;
-    }>()
+    .$type<JobWeights>()
     .notNull()
-    .default({ skills: 40, experience: 30, projects: 20, trust: 10 }),
+    .default(DEFAULT_JOB_WEIGHTS),
+  criteria: json("criteria")
+    .$type<JobCriteria>()
+    .notNull()
+    .default(DEFAULT_JOB_CRITERIA),
   location: text("location"),
   employmentType: text("employment_type").default("full_time"),
   deadline: pgTimestamp("deadline"),

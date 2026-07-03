@@ -1,7 +1,7 @@
-import { text, integer, pgTable } from "drizzle-orm/pg-core";
+import { integer, pgTable, text } from "drizzle-orm/pg-core";
 import { users } from "../auth.schema";
-import { jobPostings } from "./job-postings.schema";
 import { timestamp } from "./columns";
+import { jobPostings } from "./job-postings.schema";
 
 export const resumes = pgTable("resumes", {
   id: text("id").primaryKey(),
@@ -12,6 +12,9 @@ export const resumes = pgTable("resumes", {
   fileUrl: text("file_url").notNull(),
   fileType: text("file_type").notNull(),
   fileSize: integer("file_size"),
+  uploadBatchId: text("upload_batch_id"),
+  uploadFileKey: text("upload_file_key"),
+  uploadAttempt: integer("upload_attempt"),
   uploadedBy: text("uploaded_by")
     .notNull()
     .references(() => users.id),

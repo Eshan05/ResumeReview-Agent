@@ -1,23 +1,27 @@
 import { relations } from "drizzle-orm";
 
 import {
-  users,
-  sessions,
   accounts,
-  organizations,
-  members,
   invitations,
-  twoFactors,
+  members,
+  organizations,
   passkeys,
+  sessions,
+  twoFactors,
+  users,
 } from "../auth.schema";
-import { auditLogs } from "./audit-logs.schema";
-import { jobPostings } from "./job-postings.schema";
-import { resumes } from "./resumes.schema";
-import { resumeResults } from "./resume-results.schema";
 import { agentRuns } from "./agent-runs.schema";
+import { auditLogs } from "./audit-logs.schema";
+import { candidateCrawlRuns } from "./candidate-crawl-runs.schema";
+import { candidateEvidenceChunks } from "./candidate-evidence-chunks.schema";
 import { candidateNotes } from "./candidates.schema";
-import { interviews } from "./interviews.schema";
 import { emailLogs } from "./email-logs.schema";
+import { interviews } from "./interviews.schema";
+import { jobPostings } from "./job-postings.schema";
+import { resumeResults } from "./resume-results.schema";
+import { resumeUploadBatches } from "./resume-upload-batches.schema";
+import { resumeUploadItems } from "./resume-upload-items.schema";
+import { resumes } from "./resumes.schema";
 
 export const usersRelations = relations(users, ({ many }) => ({
   sessions: many(sessions),
@@ -32,6 +36,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   interviews: many(interviews),
   auditLogs: many(auditLogs),
   emailLogs: many(emailLogs),
+  resumeUploadBatches: many(resumeUploadBatches),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -101,8 +106,12 @@ export const jobPostingsRelations = relations(jobPostings, ({ one, many }) => ({
   }),
   resumes: many(resumes),
   agentRuns: many(agentRuns),
+  candidateCrawlRuns: many(candidateCrawlRuns),
+  candidateEvidenceChunks: many(candidateEvidenceChunks),
   interviews: many(interviews),
   emailLogs: many(emailLogs),
+  resumeUploadBatches: many(resumeUploadBatches),
+  resumeUploadItems: many(resumeUploadItems),
 }));
 
 export const resumesRelations = relations(resumes, ({ one, many }) => ({
@@ -114,11 +123,14 @@ export const resumesRelations = relations(resumes, ({ one, many }) => ({
     fields: [resumes.uploadedBy],
     references: [users.id],
   }),
-  resumeResult: one(resumeResults),
+  resumeResults: many(resumeResults),
   agentRuns: many(agentRuns),
+  candidateCrawlRuns: many(candidateCrawlRuns),
+  candidateEvidenceChunks: many(candidateEvidenceChunks),
   candidateNotes: many(candidateNotes),
   interviews: many(interviews),
   emailLogs: many(emailLogs),
+  resumeUploadItems: many(resumeUploadItems),
 }));
 
 export const resumeResultsRelations = relations(resumeResults, ({ one }) => ({
@@ -137,7 +149,73 @@ export const agentRunsRelations = relations(agentRuns, ({ one }) => ({
     fields: [agentRuns.jobPostingId],
     references: [jobPostings.id],
   }),
+  uploadBatch: one(resumeUploadBatches, {
+    fields: [agentRuns.uploadBatchId],
+    references: [resumeUploadBatches.id],
+  }),
 }));
+
+export const resumeUploadBatchesRelations = relations(
+  resumeUploadBatches,
+  ({ one, many }) => ({
+    jobPosting: one(jobPostings, {
+      fields: [resumeUploadBatches.jobPostingId],
+      references: [jobPostings.id],
+    }),
+    uploadedByUser: one(users, {
+      fields: [resumeUploadBatches.uploadedBy],
+      references: [users.id],
+    }),
+    items: many(resumeUploadItems),
+    agentRuns: many(agentRuns),
+  }),
+);
+
+export const resumeUploadItemsRelations = relations(
+  resumeUploadItems,
+  ({ one }) => ({
+    batch: one(resumeUploadBatches, {
+      fields: [resumeUploadItems.batchId],
+      references: [resumeUploadBatches.id],
+    }),
+    jobPosting: one(jobPostings, {
+      fields: [resumeUploadItems.jobPostingId],
+      references: [jobPostings.id],
+    }),
+    resume: one(resumes, {
+      fields: [resumeUploadItems.resumeId],
+      references: [resumes.id],
+    }),
+  }),
+);
+
+export const candidateEvidenceChunksRelations = relations(
+  candidateEvidenceChunks,
+  ({ one }) => ({
+    jobPosting: one(jobPostings, {
+      fields: [candidateEvidenceChunks.jobPostingId],
+      references: [jobPostings.id],
+    }),
+    resume: one(resumes, {
+      fields: [candidateEvidenceChunks.resumeId],
+      references: [resumes.id],
+    }),
+  }),
+);
+
+export const candidateCrawlRunsRelations = relations(
+  candidateCrawlRuns,
+  ({ one }) => ({
+    jobPosting: one(jobPostings, {
+      fields: [candidateCrawlRuns.jobPostingId],
+      references: [jobPostings.id],
+    }),
+    resume: one(resumes, {
+      fields: [candidateCrawlRuns.resumeId],
+      references: [resumes.id],
+    }),
+  }),
+);
 
 export const candidateNotesRelations = relations(candidateNotes, ({ one }) => ({
   resume: one(resumes, {
