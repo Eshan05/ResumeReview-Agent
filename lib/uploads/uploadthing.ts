@@ -14,6 +14,7 @@ export const UploadButton = generateUploadButton<UploadRouter>({
 export const UploadDropzone = generateUploadDropzone<UploadRouter>({
   url: uploadsRouteUrl,
 });
-export const { uploadFiles, useUploadThing } = generateReactHelpers<UploadRouter>({
-  url: uploadsRouteUrl,
-});
+export const { uploadFiles, useUploadThing } =
+  generateReactHelpers<UploadRouter>({
+    url: uploadsRouteUrl,
+  });
