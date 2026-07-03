@@ -2,9 +2,8 @@
 
 import * as React from "react"
 import { cn } from "@/lib/utils"
-import { WorkflowStep, type StepStatus } from "./workflow-step"
-import { Badge } from "@/components/ui/badge"
-import { Clock, FileText, Loader2 } from "lucide-react"
+import { WorkflowStep, type StepStatus, type AgentSubStep } from "./workflow-step"
+import { Clock, Loader2 } from "lucide-react"
 
 export interface WorkflowPhase {
   id: string
@@ -14,8 +13,10 @@ export interface WorkflowPhase {
   category: string
   categoryColor?: string
   duration?: string
-  details?: string[]
+  details?: React.ReactNode
+  subSteps?: AgentSubStep[]
   files?: Array<{ name: string; type: "pdf" | "xlsx" | "docx" | "txt" | "other" }>
+  parallelGroup?: number
 }
 
 export interface WorkflowViewProps {
@@ -26,18 +27,11 @@ export interface WorkflowViewProps {
   className?: string
 }
 
-const statusLabels: Record<string, string> = {
-  idle: "Ready",
-  processing: "Processing...",
-  completed: "Completed",
-  error: "Failed",
-}
-
-const statusBadgeClasses: Record<string, string> = {
-  idle: "bg-muted text-muted-foreground border-border",
-  processing: "bg-blue-50 text-blue-700 border-blue-200",
-  completed: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  error: "bg-red-50 text-red-700 border-red-200",
+const statusConfig: Record<string, { label: string; dotClass: string }> = {
+  idle: { label: "Ready", dotClass: "bg-muted-foreground/30" },
+  processing: { label: "Processing", dotClass: "bg-blue-500" },
+  completed: { label: "Completed", dotClass: "bg-emerald-500" },
+  error: { label: "Failed", dotClass: "bg-red-500" },
 }
 
 export function WorkflowView({
@@ -47,65 +41,114 @@ export function WorkflowView({
   elapsed,
   className,
 }: WorkflowViewProps) {
+  const config = statusConfig[overallStatus]
+
+  // Group phases by parallelGroup to show parallel execution
+  const groupedPhases = React.useMemo(() => {
+    const groups: Array<{ phases: WorkflowPhase[]; isParallel: boolean }> = []
+    let currentGroup: WorkflowPhase[] = []
+    let currentParallelGroup: number | undefined = undefined
+
+    phases.forEach((phase) => {
+      if (phase.parallelGroup !== undefined && phase.parallelGroup === currentParallelGroup) {
+        currentGroup.push(phase)
+      } else {
+        if (currentGroup.length > 0) {
+          groups.push({ phases: currentGroup, isParallel: currentGroup.length > 1 })
+        }
+        currentGroup = [phase]
+        currentParallelGroup = phase.parallelGroup
+      }
+    })
+    if (currentGroup.length > 0) {
+      groups.push({ phases: currentGroup, isParallel: currentGroup.length > 1 })
+    }
+    return groups
+  }, [phases])
+
   return (
-    <div className={cn("w-full", className)}>
+    <div className={cn("bg-card rounded-xl border border-border/60 overflow-hidden", className)}>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-border/40">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
+          {overallStatus === "processing" ? (
+            <Loader2 className="size-4 text-blue-500 animate-spin" />
+          ) : (
+            <div className={cn("size-2 rounded-full", config.dotClass)} />
+          )}
+          <h3 className="text-[13px] font-medium text-foreground">
             {overallStatus === "processing" ? (
-              <Loader2 className="size-4 text-blue-500 animate-spin" />
-            ) : overallStatus === "completed" ? (
-              <div className="size-2 rounded-full bg-emerald-500" />
-            ) : overallStatus === "error" ? (
-              <div className="size-2 rounded-full bg-red-500" />
+              <>Executing Workflow — <span className="text-muted-foreground">{resumeName}</span></>
             ) : (
-              <div className="size-2 rounded-full bg-muted-foreground/30" />
+              <>{resumeName}</>
             )}
-            <h3 className="text-sm font-medium text-foreground">
-              {resumeName}
-            </h3>
-          </div>
-          <Badge
-            variant="outline"
-            className={cn("text-[10px] font-medium", statusBadgeClasses[overallStatus])}
-          >
-            {statusLabels[overallStatus]}
-          </Badge>
+          </h3>
         </div>
-        {elapsed && (
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Clock className="size-3" />
-            <span className="tabular-nums">{elapsed}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-4">
+          <span className={cn("text-xs font-medium",
+            overallStatus === "processing" ? "text-blue-600 dark:text-blue-400" :
+            overallStatus === "completed" ? "text-emerald-600 dark:text-emerald-400" :
+            "text-muted-foreground"
+          )}>
+            {config.label}
+          </span>
+          {elapsed && (
+            <span className="text-xs text-muted-foreground tabular-nums flex items-center gap-1">
+              <Clock className="size-3" />
+              {elapsed}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Phases */}
-      <div className="px-4">
-        {phases.map((phase) => (
-          <WorkflowStep
-            key={phase.id}
-            title={phase.title}
-            description={phase.description}
-            status={phase.status}
-            category={phase.category}
-            categoryColor={phase.categoryColor}
-            duration={phase.duration}
-            files={phase.files}
-          >
-            {phase.details && (
-              <ul className="space-y-1">
-                {phase.details.map((detail, i) => (
-                  <li key={i} className="flex items-start gap-2">
-                    <span className="text-muted-foreground/50 mt-0.5">•</span>
-                    <span>{detail}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </WorkflowStep>
-        ))}
+      <div className="divide-y divide-border/40">
+        {groupedPhases.map((group, gi) => {
+          if (group.isParallel) {
+            return (
+              <div key={gi} className="px-5 py-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="h-px flex-1 bg-border/30" />
+                  <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Parallel</span>
+                  <div className="h-px flex-1 bg-border/30" />
+                </div>
+                <div className="space-y-0 divide-y divide-border/30">
+                  {group.phases.map((phase) => (
+                    <WorkflowStep
+                      key={phase.id}
+                      title={phase.title}
+                      description={phase.description}
+                      status={phase.status}
+                      category={phase.category}
+                      categoryColor={phase.categoryColor}
+                      duration={phase.duration}
+                      subSteps={phase.subSteps}
+                      files={phase.files}
+                    >
+                      {phase.details}
+                    </WorkflowStep>
+                  ))}
+                </div>
+              </div>
+            )
+          }
+
+          return group.phases.map((phase) => (
+            <WorkflowStep
+              key={phase.id}
+              title={phase.title}
+              description={phase.description}
+              status={phase.status}
+              category={phase.category}
+              categoryColor={phase.categoryColor}
+              duration={phase.duration}
+              subSteps={phase.subSteps}
+              files={phase.files}
+            >
+              {phase.details}
+            </WorkflowStep>
+          ))
+        })}
       </div>
     </div>
   )
