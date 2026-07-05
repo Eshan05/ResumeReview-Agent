@@ -1,7 +1,9 @@
-const cleanUrlForCookieDomain = (url: string | undefined): string | undefined => {
+const cleanUrlForCookieDomain = (
+  url: string | undefined,
+): string | undefined => {
   if (!url) return undefined;
-  const domain = url.replace(/^https?:\/\//, '');
-  const cleanedDomain = domain.replace(/\/$/, '');
+  const domain = url.replace(/^https?:\/\//, "");
+  const cleanedDomain = domain.replace(/\/$/, "");
   return `.${cleanedDomain}`;
 };
 
@@ -23,12 +25,11 @@ export const cookieDomain: string | undefined =
         : undefined
     : undefined;
 
-
 export const authBaseUrl =
   process.env.BETTER_AUTH_URL ||
   process.env.NEXT_PUBLIC_BETTER_AUTH_BASE ||
   baseURL ||
-  "http://localhost:3000";
+  "http://localhost:3001";
 export const authSecret =
   process.env.BETTER_AUTH_SECRET ||
   "local-development-secret-change-before-production-123456789";
