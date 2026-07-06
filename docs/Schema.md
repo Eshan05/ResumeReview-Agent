@@ -205,6 +205,7 @@ CREATE TABLE job_postings (
   title TEXT NOT NULL,
   description TEXT NOT NULL,
   weights JSONB NOT NULL DEFAULT '{"skills": 35, "experience": 25, "projects": 15, "trust": 10, "education": 15}',
+  criteria JSONB NOT NULL DEFAULT '{"rubricTemplate":"full_stack","requiredSkills":[],"bonusSkills":[],"experience":{"minYears":null,"targetLevel":"unknown","signals":[]},"projects":{"complexity":null,"expectations":[],"preferredEvidence":[]},"education":{"requirements":[],"preferred":[],"certifications":[]},"redFlags":[]}',
   location TEXT,
   employment_type TEXT DEFAULT 'full_time',
   deadline TIMESTAMP,
@@ -216,6 +217,7 @@ CREATE TABLE job_postings (
 
 **Fields:**
 - `weights`: JSON object with keys `skills`, `experience`, `projects`, `trust`, `education`. Values are percentages that sum to 100.
+- `criteria`: Structured HR rubric for the role, including required/bonus skills, experience signals, project expectations, education preferences, and red flags. Used by review agents, scoring prompts, evidence indexing, and Candidate Ask.
 - `location`: Remote, on-site, hybrid, or specific location string.
 - `employment_type`: full_time, part_time, contract, internship.
 - `status`: active, paused, closed.
@@ -269,12 +271,18 @@ CREATE TABLE resume_results (
   skill_verification JSONB,
   project_matches JSONB,
   final_score INTEGER,
-  rank INTEGER,
+  rank INTEGER, -- legacy cache; application reads compute current rank
   summary TEXT,
+  input_hashes JSONB,
   model_versions JSONB,
+  rubric_snapshot JSONB,
   created_at TIMESTAMP NOT NULL DEFAULT now()
 );
 ```
+
+`resume_results.rank` is not authoritative. Candidate list/detail reads compute rank from the current job result set so parallel workflow completions cannot race while rewriting every result row.
+
+`resume_results` is append-only across review attempts. A completed agent run writes `resume-result-{agentRunId}` once; repeating the same durable step is idempotent, while a deliberate retry creates a new agent run and result. Candidate reads use the newest successful result. `rubric_snapshot` preserves criteria and weights, while `input_hashes` records SHA-256 fingerprints without duplicating resume text. Legacy results whose original agent-run row was reused remain visible as non-openable legacy history entries instead of being incorrectly attached to a later attempt.
 
 **JSONB shapes:**
 
@@ -399,8 +407,45 @@ CREATE TABLE resume_results (
 { "matchedProjects": [{ "project": "E-commerce Platform", "relevance": 87, "description": "Direct match for full-stack role" }] }
 
 // model_versions
-{ "extraction": "llama-4-scout-17b-16e-instruct", "reasoning": "gemini-2.5-flash", "scoring": "llama-3.3-70b-versatile" }
+{
+  "agentVersion": "resume-review-agent-v1",
+  "assessmentSchemaVersion": "resume-assessment-v1",
+  "model": "llama-3.3-70b-versatile",
+  "specialistModels": ["llama-3.3-70b-versatile", "gpt-oss-120b"],
+  "specialistProviders": ["groq", "cerebras"],
+  "provider": "groq",
+  "scoringVersion": "weighted-score-v1",
+  "prompts": {
+    "master": "resume-master-prompt-v2",
+    "specialist": "resume-specialist-prompt-v2"
+  }
+}
 ```
+
+### ai_provider_quota_reservations
+
+Cross-instance model-provider quota ledger. Every physical Groq/Cerebras attempt first creates one idempotent reservation; completed usage and provider cooldowns are reconciled onto the same row.
+
+```sql
+CREATE TABLE ai_provider_quota_reservations (
+  id TEXT PRIMARY KEY,
+  provider TEXT NOT NULL,
+  model TEXT NOT NULL,
+  request_key TEXT NOT NULL,
+  request_kind TEXT NOT NULL,
+  estimated_tokens INTEGER NOT NULL,
+  actual_input_tokens INTEGER,
+  actual_output_tokens INTEGER,
+  status TEXT NOT NULL DEFAULT 'reserved',
+  error_code TEXT,
+  blocked_until TIMESTAMPTZ,
+  reserved_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  completed_at TIMESTAMPTZ,
+  metadata JSON
+);
+```
+
+The scheduler evaluates rolling minute/hour/day usage while holding a transaction-scoped advisory lock on `provider:model`. Old rows remain operational audit data until the configured retention cleanup removes them.
 
 ### agent_runs
 

@@ -1,5 +1,5 @@
 import { passkey } from "@better-auth/passkey";
-import { betterAuth, type BetterAuthOptions } from "better-auth";
+import { type BetterAuthOptions, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
@@ -11,17 +11,18 @@ import {
   lastLoginMethod,
   multiSession,
   openAPI,
-  twoFactor
+  twoFactor,
 } from "better-auth/plugins";
-
-import { resend } from "@/lib/email/resend";
-import { reactResetPasswordEmail } from "@/lib/email/reset-password";
+import {
+  backgroundTasksHandler,
+  buildAuthAuditLog,
+} from "@/lib/auth/helper-functions";
 import { auditLogs } from "@/lib/db/app.schema";
-import { backgroundTasksHandler, buildAuthAuditLog } from "@/lib/auth/helper-functions";
-
-import { authBaseUrl, authSecret, baseURL, cookieDomain } from "@/utils/constants";
 import { db } from "@/lib/db/db";
 import * as schema from "@/lib/db/schema";
+import { resend } from "@/lib/email/resend";
+import { reactResetPasswordEmail } from "@/lib/email/reset-password";
+import { authBaseUrl, authSecret, cookieDomain } from "@/utils/constants";
 
 const from = process.env.BETTER_AUTH_EMAIL || "delivered@resend.dev";
 const to = process.env.TEST_EMAIL || "";
@@ -34,7 +35,7 @@ const authOptions = {
   database: drizzleAdapter(db, {
     provider: "pg",
     usePlural: true,
-    schema
+    schema,
   }),
   session: {
     cookieCache: {
@@ -80,7 +81,7 @@ const authOptions = {
     },
   },
   plugins: [
-    // 
+    //
     twoFactor({
       otpOptions: {
         async sendOTP({ user, otp }) {
@@ -128,6 +129,7 @@ const authOptions = {
   trustedOrigins: [
     "exp://",
     "http://localhost:3000",
+    "http://localhost:3001",
     "http://192.168.1.*:3000",
     process.env.NEXT_PUBLIC_BETTER_AUTH_BASE || authBaseUrl,
   ],
@@ -143,6 +145,9 @@ export const auth = betterAuth({
   ...authOptions,
   plugins: [
     ...(authOptions.plugins ?? []),
-    customSession(async ({ user, session }) => ({ user, session }), authOptions),
+    customSession(
+      async ({ user, session }) => ({ user, session }),
+      authOptions,
+    ),
   ],
 });
